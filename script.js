@@ -1,16 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
  
-  // Segna quando la pagina sta scorrendo: serve a fermare canvas e hover delle card
-  let lastScrollTime = 0;
-  let scrollEndTimer = null;
- 
-  function markScrolling() {
-    lastScrollTime = performance.now();
-    document.body.classList.add("is-scrolling");
-    clearTimeout(scrollEndTimer);
-    scrollEndTimer = setTimeout(() => document.body.classList.remove("is-scrolling"), 150);
-  }
- 
   // ==========================================================================
   // 1. BACKGROUND CANVAS HI-TECH (RETTANGOLI CON CROCETTA + ROTAZIONE)
   // ==========================================================================
@@ -19,7 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = canvas.getContext("2d");
     let boxesArray = [];
  
-    let mouse = { x: null, y: null, radius: 180 };
+    let mouse = {
+      x: null,
+      y: null,
+      radius: 180
+    };
  
     window.addEventListener("mousemove", (e) => {
       mouse.x = e.clientX;
@@ -93,12 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initBoxes();
  
     function animateCanvas() {
-      // Mentre si scorre il canvas resta fermo: lo scroll ha tutta la potenza del browser
-      if (performance.now() - lastScrollTime < 200) {
-        requestAnimationFrame(animateCanvas);
-        return;
-      }
- 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
  
       boxesArray.forEach(box => {
@@ -178,13 +165,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (reduceMotion.matches) return;                       // chi preferisce meno animazioni: scroll normale
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;    // scroll orizzontale: ci pensa il browser
  
-    // Lo scroll normale resta solo dentro una casella di testo che ha davvero testo da scorrere
     const el = e.target instanceof Element ? e.target : null;
-    const ta = el && el.closest("textarea");
-    if (ta && ta.scrollHeight > ta.clientHeight) return;
+    if (el && el.closest("textarea, select")) return;       // lascia scorrere i campi del modulo
  
     e.preventDefault();
-    markScrolling();
  
     if (mode !== "wheel") {                                 // si parte da fermo o dall'animazione dei link
       stopAnimation();
@@ -286,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Se la pagina viene scrollata in altro modo (barra laterale, tastiera, touch, ricerca nella pagina),
   // l'animazione si ferma subito e cede il controllo: niente più "strattoni" all'indietro.
   window.addEventListener("scroll", () => {
-    markScrolling();
     if (mode === "idle") {
       syncToNative();
     } else if (Math.abs(window.scrollY - lastWrittenY) > 2) {
@@ -464,4 +447,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
- 
