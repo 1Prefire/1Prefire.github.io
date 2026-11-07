@@ -115,11 +115,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================================
   // 2. SMOOTH SCROLL: ROTELLINA (INERZIA) + LINK DI NAVIGAZIONE (ANIMATO)
   // ==========================================================================
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  // Se Windows/Mac ha le animazioni di sistema disattivate, il browser lo segnala e lo scroll fluido
+// verrebbe spento. Con false lo scroll fluido resta SEMPRE attivo; con true rispetta quell'impostazione.
+const RESPECT_REDUCED_MOTION = false;
+const reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+const reduceMotion = { get matches() { return RESPECT_REDUCED_MOTION && reduceMotionQuery.matches; } };
  
   // --- Regolazioni: cambia questi numeri per modificare la sensazione ---
-  const WHEEL_SPEED = 0.7;          // quanto avanza la pagina a ogni "tacca" della rotellina
-  const WHEEL_SMOOTHING_MS = 270;   // più alto = scivolamento più lungo e morbido
+  const WHEEL_SPEED = 1.6;          // quanto avanza la pagina a ogni "tacca" della rotellina
+  const WHEEL_SMOOTHING_MS = 320;   // più alto = scivolamento più lungo e morbido
   const ANCHOR_MIN_MS = 1000;       // durata minima dello scroll dei link (ms)
   const ANCHOR_MAX_MS = 2200;       // durata massima dello scroll dei link (ms)
   const ANCHOR_MS_PER_PX = 1.5;     // più alto = scroll dei link più lento
