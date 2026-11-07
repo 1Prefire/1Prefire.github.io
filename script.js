@@ -115,64 +115,95 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================================
   // 2. SMOOTH SCROLL: ROTELLINA (INERZIA) + LINK DI NAVIGAZIONE (ANIMATO)
   // ==========================================================================
-  let targetScrollY = window.pageYOffset;
-  let currentScrollY = window.pageYOffset;
-  let isScrollingActive = false;   // inerzia rotellina in corso
-  let isAnchorScrolling = false;   // animazione click sui link in corso
-  let anchorRaf = null;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
  
-  function getMaxScroll() {
-    return document.documentElement.scrollHeight - window.innerHeight;
+  // --- Regolazioni: cambia questi numeri per modificare la sensazione ---
+  const WHEEL_SPEED = 0.7;          // quanto avanza la pagina a ogni "tacca" della rotellina
+  const WHEEL_SMOOTHING_MS = 270;   // più alto = scivolamento più lungo e morbido
+  const ANCHOR_MIN_MS = 1000;       // durata minima dello scroll dei link (ms)
+  const ANCHOR_MAX_MS = 2200;       // durata massima dello scroll dei link (ms)
+  const ANCHOR_MS_PER_PX = 1.5;     // più alto = scroll dei link più lento
+  const HEADER_OFFSET = 80;         // altezza della navbar fissa
+ 
+  let mode = "idle";                // "idle" | "wheel" (inerzia rotellina) | "anchor" (click su un link)
+  let targetY = window.scrollY;     // dove deve arrivare la pagina
+  let currentY = window.scrollY;    // dove si trova ora (con decimali, non arrotondata)
+  let lastWrittenY = window.scrollY;
+  let lastFrameTime = null;
+  let rafId = null;
+ 
+  const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
+  const getMaxScroll = () =>
+    Math.max(0, document.documentElement.scrollHeight - document.documentElement.clientHeight);
+ 
+  function writeScroll(y) {
+    window.scrollTo(0, y);
+    lastWrittenY = window.scrollY;  // ricordo cosa ho scritto io, per riconoscere lo scroll fatto dall'utente
+  }
+ 
+  function syncToNative() {
+    currentY = targetY = lastWrittenY = window.scrollY;
+  }
+ 
+  function stopAnimation() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    mode = "idle";
   }
  
   // --- Rotellina con inerzia morbida ---
+  function wheelDeltaInPixels(e) {
+    if (e.deltaMode === 1) return e.deltaY * 33;                  // righe (Firefox) → pixel
+    if (e.deltaMode === 2) return e.deltaY * window.innerHeight;  // pagine → pixel
+    return e.deltaY;
+  }
+ 
   window.addEventListener("wheel", (e) => {
-    if (e.target.closest('textarea') || e.target.closest('select')) return;
+    if (e.ctrlKey) return;                                  // Ctrl + rotellina = zoom del browser
+    if (reduceMotion.matches) return;                       // chi preferisce meno animazioni: scroll normale
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;    // scroll orizzontale: ci pensa il browser
+ 
+    const el = e.target instanceof Element ? e.target : null;
+    if (el && el.closest("textarea, select")) return;       // lascia scorrere i campi del modulo
  
     e.preventDefault();
  
-    // Se stava andando l'animazione dei link, la interrompiamo
-    if (isAnchorScrolling) {
-      cancelAnimationFrame(anchorRaf);
-      isAnchorScrolling = false;
-      targetScrollY = window.pageYOffset;
+    if (mode !== "wheel") {                                 // si parte da fermo o dall'animazione dei link
+      stopAnimation();
+      syncToNative();
     }
  
-    targetScrollY += e.deltaY * 0.7; // più basso = scroll più corto e lento
-    targetScrollY = Math.max(0, Math.min(targetScrollY, getMaxScroll()));
+    targetY = clamp(targetY + wheelDeltaInPixels(e) * WHEEL_SPEED, 0, getMaxScroll());
  
-    if (!isScrollingActive) {
-      isScrollingActive = true;
-      requestAnimationFrame(stepScroll);
+    if (mode !== "wheel") {
+      mode = "wheel";
+      lastFrameTime = null;
+      rafId = requestAnimationFrame(wheelStep);
     }
   }, { passive: false });
  
-  function stepScroll() {
-    // Se è partita l'animazione dei link, la rotellina si ferma
-    if (isAnchorScrolling) {
-      isScrollingActive = false;
+  function wheelStep(now) {
+    // Il movimento dipende dal tempo e non dal numero di frame:
+    // identico su schermi a 60, 120 o 144 Hz.
+    const dt = lastFrameTime === null ? 16.7 : clamp(now - lastFrameTime, 1, 50);
+    lastFrameTime = now;
+ 
+    const distance = targetY - currentY;
+ 
+    if (Math.abs(distance) < 0.5) {      // arrivati: mi fermo del tutto
+      currentY = targetY;
+      writeScroll(currentY);
+      rafId = null;
+      mode = "idle";
       return;
     }
  
-    currentScrollY = window.pageYOffset;
-    const distance = targetScrollY - currentScrollY;
- 
-    currentScrollY += distance * 0.06; // più basso = scivolamento più lungo e morbido
-    window.scrollTo(0, currentScrollY);
- 
-    if (Math.abs(distance) > 0.5) {
-      requestAnimationFrame(stepScroll);
-    } else {
-      isScrollingActive = false;
-    }
+    currentY += distance * (1 - Math.exp(-dt / WHEEL_SMOOTHING_MS));
+    writeScroll(currentY);
+    rafId = requestAnimationFrame(wheelStep);
   }
- 
-  // Sincronizza con la barra di scorrimento laterale / tastiera
-  window.addEventListener("scroll", () => {
-    if (!isScrollingActive && !isAnchorScrolling) {
-      targetScrollY = window.pageYOffset;
-    }
-  });
  
   // --- Animazione lenta per i click sui link ---
   function easeInOutCubic(t) {
@@ -182,56 +213,84 @@ document.addEventListener("DOMContentLoaded", () => {
   }
  
   function smoothScrollTo(target) {
-    cancelAnimationFrame(anchorRaf);
-    isScrollingActive = false;
- 
-    const start = window.pageYOffset;
-    target = Math.max(0, Math.min(target, getMaxScroll()));
+    const start = window.scrollY;
+    target = clamp(target, 0, getMaxScroll());
     const distance = target - start;
  
-    if (Math.abs(distance) < 1) return;
+    stopAnimation();
  
-    // Durata in millisecondi: più è lontana la sezione, più dura.
-    // Per rendere lo scroll PIÙ LENTO aumenta questi numeri.
-    const duration = Math.min(2200, Math.max(1000, Math.abs(distance) * 1.5));
+    if (Math.abs(distance) < 1) {
+      syncToNative();
+      return;
+    }
  
+    if (reduceMotion.matches) {          // niente animazione: salto diretto
+      writeScroll(target);
+      syncToNative();
+      return;
+    }
+ 
+    // Più la sezione è lontana, più dura (tra ANCHOR_MIN_MS e ANCHOR_MAX_MS)
+    const duration = clamp(Math.abs(distance) * ANCHOR_MS_PER_PX, ANCHOR_MIN_MS, ANCHOR_MAX_MS);
     let startTime = null;
-    isAnchorScrolling = true;
+    mode = "anchor";
  
-    function step(timestamp) {
-      if (startTime === null) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const position = start + distance * easeInOutCubic(progress);
+    function step(now) {
+      if (startTime === null) startTime = now;
+      const progress = Math.min((now - startTime) / duration, 1);
  
-      window.scrollTo(0, position);
+      writeScroll(start + distance * easeInOutCubic(progress));
  
       if (progress < 1) {
-        anchorRaf = requestAnimationFrame(step);
+        rafId = requestAnimationFrame(step);
       } else {
-        isAnchorScrolling = false;
-        targetScrollY = window.pageYOffset;
+        rafId = null;
+        mode = "idle";
+        syncToNative();
       }
     }
  
-    anchorRaf = requestAnimationFrame(step);
+    rafId = requestAnimationFrame(step);
   }
  
   // Click sui link (Home, Servizi, Preventivo, Contatti, bottoni hero)
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      const targetId = this.getAttribute('href');
-      if (targetId === '#') return;
+    anchor.addEventListener("click", function (e) {
+      const targetId = this.getAttribute("href");
+      if (targetId === "#") return;
       const targetElement = document.querySelector(targetId);
+      if (!targetElement) return;
  
-      if (targetElement) {
-        e.preventDefault();
-        const headerOffset = 80;
-        const elementPosition = targetElement.getBoundingClientRect().top;
-        const targetPosition = elementPosition + window.pageYOffset - headerOffset;
- 
-        smoothScrollTo(targetPosition);
-      }
+      e.preventDefault();
+      const elementTop = targetElement.getBoundingClientRect().top + window.scrollY;
+      smoothScrollTo(elementTop - HEADER_OFFSET);
     });
+  });
+ 
+  // Se la pagina viene scrollata in altro modo (barra laterale, tastiera, touch, ricerca nella pagina),
+  // l'animazione si ferma subito e cede il controllo: niente più "strattoni" all'indietro.
+  window.addEventListener("scroll", () => {
+    if (mode === "idle") {
+      syncToNative();
+    } else if (Math.abs(window.scrollY - lastWrittenY) > 2) {
+      stopAnimation();
+      syncToNative();
+    }
+  }, { passive: true });
+ 
+  window.addEventListener("touchstart", () => {
+    if (mode !== "idle") {
+      stopAnimation();
+      syncToNative();
+    }
+  }, { passive: true });
+ 
+  window.addEventListener("resize", () => {
+    if (mode === "idle") {
+      syncToNative();
+    } else {
+      targetY = clamp(targetY, 0, getMaxScroll());
+    }
   });
  
   // ==========================================================================
@@ -268,12 +327,123 @@ document.addEventListener("DOMContentLoaded", () => {
     if (urgentCheck && urgentCheck.checked) {
       basePrice += 50;
     }
-   calcTotal.textContent = `${basePrice}€`;
+    calcTotal.textContent = `${basePrice}€`;
   }
-
+ 
   if (calcService) {
-    calcService.addEventListener('change', updateTotal);
-    urgentCheck.addEventListener('change', updateTotal);
+    calcService.addEventListener("change", updateTotal);
+    if (urgentCheck) urgentCheck.addEventListener("change", updateTotal);
     updateTotal();
+  }
+ 
+  // ==========================================================================
+  // 5. INVIO MODULO CONTATTI (Web3Forms, senza uscire dalla pagina)
+  // ==========================================================================
+  const contactForm = document.getElementById("contactForm");
+  const formFeedback = document.getElementById("formFeedback");
+ 
+  if (contactForm && formFeedback) {
+    const PHONE_LABEL = "06 9281174";
+    const PHONE_LINK = "tel:+39069281174";
+    const SEND_TIMEOUT_MS = 15000;
+ 
+    const submitBtn = contactForm.querySelector(".btn-submit");
+    const submitLabel = submitBtn.querySelector(".btn-label");
+    const defaultLabel = submitLabel.textContent;
+ 
+    // type: "info" | "success" | "error"
+    function showFeedback(type, message, { detail = "", callUs = false } = {}) {
+      formFeedback.className = "result-box " + type;
+      formFeedback.textContent = message;          // textContent: nessun codice HTML inserito dal visitatore
+ 
+      if (callUs) {
+        formFeedback.append(" Per urgenze chiama il ");
+        const link = document.createElement("a");
+        link.href = PHONE_LINK;
+        link.textContent = PHONE_LABEL;
+        formFeedback.append(link, ".");
+      }
+ 
+      if (detail) {
+        const small = document.createElement("small");
+        small.textContent = detail;
+        formFeedback.append(small);
+      }
+    }
+ 
+    contactForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (submitBtn.disabled) return;                    // evita invii doppi
+ 
+      const formData = new FormData(contactForm);
+      if (formData.get("botcheck")) return;              // solo i bot spuntano il campo trappola
+ 
+      const payload = Object.fromEntries(formData);
+      delete payload.redirect;                           // serve solo all'invio senza JavaScript
+ 
+      submitBtn.disabled = true;
+      submitLabel.textContent = "INVIO IN CORSO...";
+      showFeedback("info", "Invio della richiesta in corso...");
+ 
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
+ 
+      try {
+        const response = await fetch(contactForm.action, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+ 
+        let result = null;
+        try {
+          result = await response.json();
+        } catch (_) {
+          // risposta non in formato JSON
+        }
+ 
+        if (response.ok && result && result.success) {
+          const name = String(payload.name || "").trim();
+          showFeedback(
+            "success",
+            `✓ GRAZIE ${name.toUpperCase()}! Richiesta inviata con successo.`,
+            { detail: "Ti ricontatteremo al numero che hai indicato." }
+          );
+          contactForm.reset();
+        } else {
+          const reason = (result && result.message) || "risposta non valida dal server";
+          console.error("Web3Forms ha rifiutato l'invio:", response.status, result);
+          showFeedback("error", "Invio non riuscito: riprova tra poco.", {
+            callUs: true,
+            detail: `Dettaglio: ${reason} (codice ${response.status})`
+          });
+        }
+      } catch (err) {
+        console.error("Invio non riuscito:", err);
+        const timedOut = err && err.name === "AbortError";
+        showFeedback(
+          "error",
+          timedOut
+            ? "Il server non ha risposto in tempo: riprova."
+            : "Impossibile contattare il servizio di invio: controlla la connessione e riprova.",
+          {
+            callUs: true,
+            detail: timedOut ? "" : "Se usi un blocco annunci, disattivalo per questo sito."
+          }
+        );
+      } finally {
+        clearTimeout(timer);
+        submitBtn.disabled = false;
+        submitLabel.textContent = defaultLabel;
+        formFeedback.scrollIntoView({
+          block: "nearest",
+          behavior: reduceMotion.matches ? "auto" : "smooth"
+        });
+      }
+    });
   }
 });
