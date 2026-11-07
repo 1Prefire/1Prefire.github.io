@@ -268,32 +268,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (urgentCheck && urgentCheck.checked) {
       basePrice += 50;
     }
-    calcTotal.textContent = `€${basePrice}`;
+   calcTotal.textContent = `${basePrice}€`;
   }
- 
-  if (calcService) calcService.addEventListener("change", updateTotal);
-  if (urgentCheck) urgentCheck.addEventListener("change", updateTotal);
- 
-  // ==========================================================================
-  // 5. INVIO FORM DI CONTATTO
-  // ==========================================================================
-  const contactForm = document.getElementById("contactForm");
-  const formFeedback = document.getElementById("formFeedback");
- 
-  if (contactForm) {
-    contactForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value;
- 
-      formFeedback.className = "result-box success";
-      formFeedback.innerHTML = `✓ GRAZIE ${name.toUpperCase()}! Richiesta inviata con successo.`;
-      formFeedback.classList.remove("hidden");
- 
-      contactForm.reset();
- 
-      setTimeout(() => {
-        formFeedback.classList.add("hidden");
-      }, 5000);
-    });
+
+  if (calcService) {
+    calcService.addEventListener('change', updateTotal);
+    urgentCheck.addEventListener('change', updateTotal);
+    updateTotal();
   }
 });

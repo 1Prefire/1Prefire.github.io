@@ -112,39 +112,49 @@
         <h2 class="section-title"><span class="cyan-accent">//</span> RICHIEDI UN INTERVENTO</h2>
         <p class="section-subtitle">Compila il modulo per essere ricontattato in tempi brevi o per richiedere un sopralluogo ad Aprilia.</p>
 
-        <form id="contactForm" class="tech-form">
-          <div class="form-group">
-            <label for="name">NOME E COGNOME *</label>
-            <input type="text" id="name" required placeholder="Es. Mario Rossi">
-          </div>
+<form action="https://api.web3forms.com/submit" method="POST" class="tech-form" id="contactForm">
+  <!-- Chiave d'accesso fornita da Web3Forms -->
+  <input type="hidden" name="access_key" value="118e1872-5d06-44b7-8ad4-d6839099be38">
+  
+  <!-- Campo per reindirizzare correttamente l'invio -->
+  <input type="hidden" name="redirect" value="https://web3forms.com/success">
 
-          <div class="form-group">
-            <label for="phone">TELEFONO *</label>
-            <input type="tel" id="phone" required placeholder="Es. 333 1234567">
-          </div>
+  <div class="form-group">
+    <label for="name">NOME E COGNOME</label>
+    <input type="text" id="name" name="name" required placeholder="Es. Mario Rossi">
+  </div>
+  
+  <div class="form-group">
+    <label for="phone">TELEFONO</label>
+    <input type="tel" id="phone" name="phone" required placeholder="Es. 333 1234567">
+  </div>
 
-          <div class="form-group">
-            <label for="service">TIPO DI INTERVENTO</label>
-            <div class="select-wrapper">
-              <select id="service" class="tech-select">
-                <option value="emergenza">Emergenza / Guasto Improvviso</option>
-                <option value="caldaia">Manutenzione / Assistenza Caldaia</option>
-                <option value="impianto">Nuovo Impianto Termoidraulico</option>
-                <option value="altro">Altro / Informazioni Generali</option>
-              </select>
-              <span class="select-arrow">▼</span>
-            </div>
-          </div>
+  <div class="form-group">
+    <label for="service">TIPO DI INTERVENTO</label>
+    <div class="select-wrapper">
+      <select id="service" name="service" class="tech-select">
+        <option value="Manutenzione">Manutenzione / Assistenza Caldaia</option>
+        <option value="Installazione">Installazione Impianto</option>
+        <option value="Riparazione Urgente">Riparazione Urgente</option>
+      </select>
+      <span class="select-arrow">▼</span>
+    </div>
+  </div>
 
-          <div class="form-group">
-            <label for="message">MESSAGGIO / NOTE</label>
-            <textarea id="message" rows="4" placeholder="Descrivi brevemente la tua richiesta..."></textarea>
-          </div>
+  <div class="form-group">
+    <label for="message">MESSAGGIO / NOTE</label>
+    <textarea id="message" name="message" rows="4" placeholder="Descrivi brevemente la tua richiesta..."></textarea>
+  </div>
 
-          <button type="submit" class="btn-primary btn-submit">
-            INVIA RICHIESTA <span class="btn-arrow">→</span>
-          </button>
-        </form>
+  <button type="submit" class="btn-primary btn-submit">
+    <span>INVIA RICHIESTA</span>
+    <span class="btn-arrow">→</span>
+  </button>
+</form>
+
+<div id="formFeedback" class="result-box hidden"></div>
+
+<div id="formFeedback" class="result-box hidden"></div>
 
         <div id="formFeedback" class="result-box hidden"></div>
       </div>
@@ -152,7 +162,7 @@
   </main>
 
   <footer>
-    <p>&copy; IDROTERMICA di Gabrielli Fabrizio | Via Giovanni Pascoli, 60, 04011 Aprilia (LT)</p>
+    <p>&copy; IDROTERMICA di Gabrielli Fabrizio | Via Giuseppe Verdi 04011 Aprilia (LT)</p>
   </footer>
 
   <script src="script.js"></script>
