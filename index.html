@@ -160,7 +160,182 @@
         </form>
 
         <!-- Messaggio di esito dell'invio (uno solo) -->
+        <div id="formFeedback" class="result<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDROTERMICA di Gabrielli Fabrizio | Aprilia</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Canvas Animato Hi-Tech -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Navbar Navigation -->
+  <header class="navbar">
+    <div class="logo">
+      <span class="hud-tag">// SYSTEM ACTIVE</span>
+      IDROTERMICA <span>GABRIELLI</span>
+    </div>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Apri menu">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <nav class="nav-menu" id="navMenu">
+      <ul>
+        <li><a href="#hero" class="nav-link">Home</a></li>
+        <li><a href="#servizi" class="nav-link">Servizi</a></li>
+        <li><a href="#calcolatore" class="nav-link">Preventivo</a></li>
+        <li><a href="#contatti" class="nav-link">Contatti</a></li>
+      </ul>
+      <a href="tel:+39069281174" class="btn-call-mobile">
+        ⚡ Chiamata Rapida: 06 9281174
+      </a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section id="hero" class="hero-section">
+      <div class="hero-content">
+        <h1>Efficienza, Assistenza e <br><span class="cyan-glow">Tecnologia per il Tuo Comfort</span></h1>
+        <p>Interventi rapidi per impianti termici, idraulici, condizionamento e manutenzione caldaie con standard hi-tech.</p>
+        <div class="hero-buttons">
+          <a href="#contatti" class="btn-primary">Richiedi Intervento <span class="btn-arrow">→</span></a>
+          <a href="tel:+39069281174" class="btn-secondary">📞 06 9281174</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Servizi Section -->
+    <section id="servizi" class="section-container">
+      <div class="badge-wrapper">
+        <span class="badge">SOLUZIONI TERMOIDRAULICHE AD APRILIA</span>
+      </div>
+      <h2 class="section-title"><span class="cyan-accent">//</span> I NOSTRI SERVIZI</h2>
+      <div class="grid-cards">
+        <div class="glass-card">
+          <div class="card-icon">🔥</div>
+          <h3>Manutenzione Caldaie</h3>
+          <p>Controllo fumi, revisioni periodiche e riparazione rapida su caldaie multimarca.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-icon">💧</div>
+          <h3>Impianti Idraulici</h3>
+          <p>Progettazione, riparazione guasti, perdite e rifacimento completo bagno/cucina.</p>
+        </div>
+        <div class="glass-card">
+          <div class="card-icon">❄️</div>
+          <h3>Climatizzazione</h3>
+          <p>Installazione di condizionatori a pompa di calore ad alta efficienza energetica.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calcolatore Section -->
+    <section id="calcolatore" class="section-container">
+      <div class="glass-card calc-card">
+        <h2 class="section-title"><span class="cyan-accent">//</span> STIMA RAPIDA INTERVENTO</h2>
+        <p class="section-subtitle">Seleziona il tipo di servizio per calcolare un'indicazione di costo di massima.</p>
+
+        <div class="calc-controls">
+          <label for="calcService">Seleziona Servizio:</label>
+          <div class="select-wrapper">
+            <select id="calcService" class="tech-select">
+              <option value="100">Controllo e Revisione Caldaia Base (€100)</option>
+              <option value="250">Assistenza & Riparazione Emergenza (€250)</option>
+              <option value="800">Installazione Climatizzatore Singolo (€800)</option>
+              <option value="1500">Sostituzione Caldaia a Condensazione (€1500)</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
+
+          <div class="urgency-option">
+            <input type="checkbox" id="urgentCheck">
+            <label for="urgentCheck">Intervento Urgente (entro 24h)</label>
+          </div>
+        </div>
+
+        <div class="calc-result">
+          <span>Stima Orientativa:</span>
+          <h3 id="calcTotal">100€</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modulo Contatti Section -->
+    <section id="contatti" class="section-container">
+      <div class="glass-card contact-card">
+        <h2 class="section-title"><span class="cyan-accent">//</span> RICHIEDI UN INTERVENTO</h2>
+        <p class="section-subtitle">Compila il modulo per essere ricontattato in tempi brevi o per richiedere un sopralluogo ad Aprilia.</p>
+
+        <!--
+          Il modulo viene inviato da script.js (sezione 5) senza uscire dalla pagina.
+          Se JavaScript non funziona, action + method inviano comunque il modulo a Web3Forms.
+        -->
+        <form action="https://api.web3forms.com/submit" method="POST" class="tech-form" id="contactForm">
+          <!-- Chiave d'accesso Web3Forms (può stare nel codice pubblico, è pensata così) -->
+          <input type="hidden" name="access_key" value="118e1872-5d06-44b7-8ad4-d6839099be38">
+          <!-- Oggetto dell'email che ricevi -->
+          <input type="hidden" name="subject" value="Nuova richiesta dal sito - Idrotermica Gabrielli">
+          <!-- Pagina mostrata da Web3Forms solo se JavaScript è disattivato -->
+          <input type="hidden" name="redirect" value="https://web3forms.com/success">
+          <!-- Anti-spam: campo trappola per i bot, deve restare nascosto e vuoto -->
+          <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" style="display: none;">
+
+          <div class="form-group">
+            <label for="name">NOME E COGNOME</label>
+            <input type="text" id="name" name="name" required autocomplete="name" placeholder="Es. Mario Rossi">
+          </div>
+
+          <div class="form-group">
+            <label for="phone">TELEFONO</label>
+            <input type="tel" id="phone" name="phone" required minlength="6" autocomplete="tel" placeholder="Es. 333 1234567">
+          </div>
+
+          <div class="form-group">
+            <label for="service">TIPO DI INTERVENTO</label>
+            <div class="select-wrapper">
+              <select id="service" name="service" class="tech-select">
+                <option value="Manutenzione">Manutenzione / Assistenza Caldaia</option>
+                <option value="Installazione">Installazione Impianto</option>
+                <option value="Riparazione Urgente">Riparazione Urgente</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="message">MESSAGGIO / NOTE</label>
+            <textarea id="message" name="message" rows="4" placeholder="Descrivi brevemente la tua richiesta..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary btn-submit">
+            <span class="btn-label">INVIA RICHIESTA</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </form>
+
+        <!-- Messaggio di esito dell'invio (uno solo) -->
         <div id="formFeedback" class="result-box hidden" role="status" aria-live="polite"></div>
+
+        <p class="form-note">Per un'urgenza chiama subito: <a href="tel:+39069281174">06 9281174</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; IDROTERMICA di Gabrielli Fabrizio | Via Giuseppe Verdi, 48, 04011 Aprilia (LT)</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>-box hidden" role="status" aria-live="polite"></div>
 
         <p class="form-note">Per un'urgenza chiama subito: <a href="tel:+39069281174">06 9281174</a></p>
       </div>
